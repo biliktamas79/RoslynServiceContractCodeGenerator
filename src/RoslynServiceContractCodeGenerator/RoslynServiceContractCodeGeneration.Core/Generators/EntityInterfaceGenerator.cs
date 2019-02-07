@@ -37,6 +37,7 @@ namespace {targetNamespace}
 $@"
     }}
 }}");
+                    return output;
         }
 
         private TextWriter WritePropertyDeclarations(TextWriter output, EntityContractGeneratorModel entityContractDeclaration)
@@ -55,13 +56,34 @@ $@"
             foreach (var prop in entityContractDeclaration.PkEntityReferences
                 .Where(pker => pker.EntityRefAttribute.Multiplicity != EntityReferenceMultiplicityEnum.Many))
             {
-                prop.EntityRefAttribute.Multiplicity
-                output.Write( itt folytatni
+                //prop.EntityRefAttribute.Multiplicity // TODO handle multiplicity
+                output.Write(
 $@"
         /// <summary>
-        /// Gets or sets the primary key of '{prop.Name}' entity reference as part of the primary key of this instance.
-        /// </summary>
-        [Key]{GetAttributeDeclarations(prop)}
+        /// Gets or sets the foreign key of the '{prop.Name}' entity reference that is part of the primary key.
+        /// </summary>{GetAttributeDeclarations(prop)}
+        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+            }
+
+            foreach (var prop in entityContractDeclaration.NonPkProperties)
+            {
+                output.Write(
+$@"
+        /// <summary>
+        /// Gets or sets the '{prop.Name}' simple property value.
+        /// </summary>{GetAttributeDeclarations(prop)}
+        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+            }
+
+            foreach (var prop in entityContractDeclaration.EntityReferences
+                .Where(pker => pker.EntityRefAttribute.Multiplicity != EntityReferenceMultiplicityEnum.Many))
+            {
+                //prop.EntityRefAttribute.Multiplicity // TODO handle multiplicity
+                output.Write(
+$@"
+        /// <summary>
+        /// Gets or sets the '{prop.Name}' navigation property.
+        /// </summary>{GetAttributeDeclarations(prop)}
         {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
             }
 
