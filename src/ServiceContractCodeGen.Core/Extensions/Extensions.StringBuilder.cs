@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Extensions
+namespace ServiceContractCodeGen.Extensions
 {
     public static partial class Extensions
     {

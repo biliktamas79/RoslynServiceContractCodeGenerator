@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RoslynServiceContractCodeGeneration.Core\RoslynServiceContractCodeGeneration.Core.csproj" />
+    <ProjectReference Include="..\ServiceContractCodeGen.Core\ServiceContractCodeGen.Core.csproj" />
   </ItemGroup>
 
 </Project>

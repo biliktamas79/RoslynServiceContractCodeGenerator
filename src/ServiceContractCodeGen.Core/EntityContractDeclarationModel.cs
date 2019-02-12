@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace RoslynServiceContractCodeGeneration
+namespace ServiceContractCodeGen
 {
     using Attributes;
     using Enums;
     using Extensions;
 
-    public class EntityContractGeneratorModel
+    /// <summary>
+    /// Model class representing an entity declaration.
+    /// </summary>
+    public class EntityContractDeclarationModel
     {
         public readonly Type DeclaringInterfaceType;
+        public readonly EntityContractDeclarationAttribute EntityContractDeclarationAttribute;
         public readonly PropertyDeclarationModel[] PkProperties;
         public readonly PropertyDeclarationModel[] NonPkProperties;
         public readonly PropertyDeclarationModel[] EntityReferences;
@@ -20,14 +24,27 @@ namespace RoslynServiceContractCodeGeneration
         public readonly string Name;
         public readonly string FriendlyName;
 
-        public EntityContractGeneratorModel(Type entityContractDeclarationInterface)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EntityContractDeclarationModel"/> class with the given entity contract declaration interface.
+        /// </summary>
+        /// <param name="entityContractDeclarationInterface">The entity contract declaration interface.</param>
+        /// <exception cref="System.ArgumentNullException">entityContractDeclarationInterface</exception>
+        /// <exception cref="System.ArgumentException">
+        /// The provided type is not an interface! - entityContractDeclarationInterface
+        /// or
+        /// The provided entity contract declaration interface does not have the EntityContractDeclarationAttribute applied
+        /// </exception>
+        /// <exception cref="System.NotSupportedException"></exception>
+        public EntityContractDeclarationModel(Type entityContractDeclarationInterface)
         {
             if (entityContractDeclarationInterface == null)
                 throw new ArgumentNullException(nameof(entityContractDeclarationInterface));
             if (!entityContractDeclarationInterface.IsInterface)
                 throw new ArgumentException("The provided type is not an interface!", nameof(entityContractDeclarationInterface));
+
+            this.EntityContractDeclarationAttribute = entityContractDeclarationInterface.GetCustomAttribute<EntityContractDeclarationAttribute>();
             // if it does not have the EntityContractDeclarationAttribute
-            if (entityContractDeclarationInterface.GetCustomAttribute<EntityContractDeclarationAttribute>() == null)
+            if (this.EntityContractDeclarationAttribute == null)
                 throw new ArgumentException($"The provided '{entityContractDeclarationInterface.Name}' type does not have the {nameof(EntityContractDeclarationAttribute)}!", nameof(entityContractDeclarationInterface));
 
             this.DeclaringInterfaceType = entityContractDeclarationInterface;
@@ -80,21 +97,43 @@ namespace RoslynServiceContractCodeGeneration
             this.EnsureCompositePkOrder();
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance has pk.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance has pk; otherwise, <c>false</c>.
+        /// </value>
         public bool HasPk
         {
             get { return this.PkProperties.Length + this.PkEntityReferences.Length > 0; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance has composite pk.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance has composite pk; otherwise, <c>false</c>.
+        /// </value>
         public bool HasCompositePk
         {
             get { return this.PkProperties.Length + this.PkEntityReferences.Length > 1; }
         }
 
+        /// <summary>
+        /// Gets the pk property count.
+        /// </summary>
+        /// <value>
+        /// The pk property count.
+        /// </value>
         public int PkPropertyCount
         {
             get { return this.PkProperties.Length + this.PkEntityReferences.Length; }
         }
 
+        /// <summary>
+        /// Ensures the composite pk order.
+        /// </summary>
+        /// <exception cref="System.ArgumentException">Order of properties marked as private key is not continuous.</exception>
         private void EnsureCompositePkOrder()
         {
             if (this.HasCompositePk)

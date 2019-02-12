@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ServiceContractCodeGen.Attributes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,6 +25,7 @@ namespace MyRoslynTest01
         string Id { get; }
     }
 
+    [EntityContractDeclaration("MyRoslynTest01")]
     interface IGetListItemsRequestV01 : IPagedBySkipTake
     {
         [Required]
@@ -31,6 +33,7 @@ namespace MyRoslynTest01
         string User { get; }
     }
 
+    [EntityContractDeclaration("MyRoslynTest01")]
     interface IGetListItemsResponseV01 : IPagedBySkipTake, IHasId
     {
         IReadOnlyList<Tuple<int, string>> Items { get; }

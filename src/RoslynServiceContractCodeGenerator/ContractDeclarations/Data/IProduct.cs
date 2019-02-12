@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using RoslynServiceContractCodeGeneration.Attributes;
+using ServiceContractCodeGen.Attributes;
 
-namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
+namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Data
 {
-    using RoslynServiceContractCodeGeneration.Enums;
-
-    [EntityContractDeclaration("MyProduct.Domain.Entities")]
+    [EntityContractDeclaration("MyProduct.Data.Entities")]
     public interface IProduct : IAuditableEntity
     {
         [PrimaryKey]
@@ -19,8 +17,5 @@ namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
         string Name { get; set; }
 
         int? WeightGramm { get; set; }
-
-        [EntityReference(EntityReferenceMultiplicityEnum.One)]
-        ICompany Owner { get; set; }
     }
 }

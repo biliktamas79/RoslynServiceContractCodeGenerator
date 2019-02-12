@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Enums
+namespace ServiceContractCodeGen.Enums
 {
     public enum EntityReferenceMultiplicityEnum
     {

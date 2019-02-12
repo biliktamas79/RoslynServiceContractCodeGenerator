@@ -2,32 +2,31 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Attributes
+namespace ServiceContractCodeGen.Attributes
 {
-    using Enums;
-
     /// <summary>
-    /// Attribute for marking properties as navigation property.
+    /// Attribute for marking properties as part of the primary key.
     /// </summary>
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-    public class EntityReferenceAttribute : Attribute
+    public class PrimaryKeyAttribute : Attribute
     {
         /// <summary>
-        /// Gets the multiplicity.
+        /// Gets or sets the order number of this property in the primary key.
+        /// (Default = -1)
         /// </summary>
         /// <value>
-        /// The multiplicity.
+        /// The order number of this property in the primary key.
         /// </value>
-        public EntityReferenceMultiplicityEnum Multiplicity { get; private set; }
+        public int Order { get; set; } = -1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PrimaryKeyAttribute"/> class.
         /// </summary>
         /// <param name="order">The order.</param>
-        public EntityReferenceAttribute(EntityReferenceMultiplicityEnum multiplicity)
+        public PrimaryKeyAttribute(int order = -1)
         {
-            this.Multiplicity = multiplicity;
+            this.Order = order;
         }
     }
 }

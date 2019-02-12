@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Enums
+namespace ServiceContractCodeGen.Enums
 {
+    [Flags]
     public enum PropertyCategoryEnum : int
     {
         PrimaryKey = 1,
-        EntityRefAsPrimaryKey = 2,
+        EntityRef = 2,
+        EntityRefAsPrimaryKey = 3,
         NonPk = 4,
-        EntityRef = 8, 
     }
 }

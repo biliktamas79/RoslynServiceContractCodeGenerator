@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Attributes
+namespace ServiceContractCodeGen.Attributes
 {
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
     public class ServiceContractDeclarationAttribute : Attribute

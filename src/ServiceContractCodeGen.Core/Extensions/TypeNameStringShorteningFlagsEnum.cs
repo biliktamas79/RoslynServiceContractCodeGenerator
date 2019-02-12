@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RoslynServiceContractCodeGeneration.Extensions
+namespace ServiceContractCodeGen.Extensions
 {
     /// <summary>
     /// Enumeration of supported type name shortening flag values

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using RoslynServiceContractCodeGeneration.Attributes;
+using ServiceContractCodeGen.Attributes;
 
 namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
 {
+    using ServiceContractCodeGen.Enums;
+
     [EntityContractDeclaration("MyProduct.Domain.Entities")]
-    public interface ICompany : IAuditableEntity
+    public interface IProduct : IAuditableEntity
     {
         [PrimaryKey]
         int Id { get; set; }
@@ -16,10 +18,9 @@ namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
         [StringLength(50, MinimumLength = 1)]
         string Name { get; set; }
 
-        /// <summary>
-        /// Gets or sets the external identifier.
-        /// </summary>
-        [StringLength(40, MinimumLength = 0)]
-        string ExternalId { get; set; }
+        int? WeightGramm { get; set; }
+
+        [EntityReference(EntityReferenceMultiplicityEnum.One)]
+        ICompany Owner { get; set; }
     }
 }

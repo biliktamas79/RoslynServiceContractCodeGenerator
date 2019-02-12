@@ -5,14 +5,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace RoslynServiceContractCodeGeneration.Generators
+namespace ServiceContractCodeGen.Generators
 {
     using Enums;
     using Extensions;
 
     public class EntityInterfaceGenerator
     {
-        public TextWriter Generate(TextWriter output, EntityContractGeneratorModel entityContractDeclaration, string targetNamespace)
+        public TextWriter Generate(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
         {
             if (output == null)
                 throw new ArgumentNullException(nameof(output));
@@ -37,54 +37,54 @@ namespace {targetNamespace}
 $@"
     }}
 }}");
-                    return output;
+            return output;
         }
 
-        private TextWriter WritePropertyDeclarations(TextWriter output, EntityContractGeneratorModel entityContractDeclaration)
+        private TextWriter WritePropertyDeclarations(TextWriter output, EntityContractDeclarationModel entityContractDeclaration)
         {
             foreach (var prop in entityContractDeclaration.PkProperties)
             {
-                output.Write(
+                output.WriteLine(
 $@"
         /// <summary>
         /// Gets or sets the '{prop.Name}' primary key property value.
         /// </summary>
         [Key]{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.PkEntityReferences
                 .Where(pker => pker.EntityRefAttribute.Multiplicity != EntityReferenceMultiplicityEnum.Many))
             {
                 //prop.EntityRefAttribute.Multiplicity // TODO handle multiplicity
-                output.Write(
+                output.WriteLine(
 $@"
         /// <summary>
         /// Gets or sets the foreign key of the '{prop.Name}' entity reference that is part of the primary key.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.NonPkProperties)
             {
-                output.Write(
+                output.WriteLine(
 $@"
         /// <summary>
         /// Gets or sets the '{prop.Name}' simple property value.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.EntityReferences
                 .Where(pker => pker.EntityRefAttribute.Multiplicity != EntityReferenceMultiplicityEnum.Many))
             {
                 //prop.EntityRefAttribute.Multiplicity // TODO handle multiplicity
-                output.Write(
+                output.WriteLine(
 $@"
         /// <summary>
-        /// Gets or sets the '{prop.Name}' navigation property.
+        /// Gets or sets the '{prop.Name}' navigation property value.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ get; set; }}");
+        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             return output;
@@ -188,12 +188,24 @@ $@"
             return sb;
         }
 
-        private static string GetBaseClassAndImplementedInterfaceListString(EntityContractGeneratorModel entityContractDeclaration)
+        private static string GetBaseClassAndImplementedInterfaceListString(EntityContractDeclarationModel entityContractDeclaration)
         {
             var interfaces = entityContractDeclaration.DeclaringInterfaceType.GetInterfaces();
             return ((interfaces == null) || (interfaces.Length == 0))
                 ? null
                 : " : " + string.Join(", ", interfaces.Select(i => i.Name));
+        }
+
+        private static string GetPropertyGetSetDeclaration(PropertyDeclarationModel propertyDeclaration)
+        {
+            if (propertyDeclaration.CanGet && propertyDeclaration.CanSet)
+                return "get; set;";
+            else if (propertyDeclaration.CanGet)
+                return "get;";
+            else if (propertyDeclaration.CanSet)
+                return "set;";
+            else
+                throw new NotSupportedException("Properties without get or set are not supported!");
         }
     }
 }
