@@ -20,6 +20,7 @@ namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
 
         int? WeightGramm { get; set; }
 
+        //[Required]
         [EntityReference(EntityReferenceMultiplicityEnum.One)]
         ICompany Owner { get; set; }
     }

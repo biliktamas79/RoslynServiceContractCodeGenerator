@@ -9,9 +9,8 @@ namespace ServiceContractCodeGen.Generators
 {
     using Enums;
     using Extensions;
-    using System.ComponentModel.DataAnnotations;
 
-    public class EntityInterfaceGenerator
+    public class DomainEntityClassGenerator
     {
         public TextWriter Generate(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
         {
@@ -26,10 +25,12 @@ namespace ServiceContractCodeGen.Generators
 $@"using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using ServiceContractCodeGen.Attributes;
 
 namespace {targetNamespace}
 {{
-    public interface I{entityContractDeclaration.FriendlyName}{GetBaseClassAndImplementedInterfaceListString(entityContractDeclaration)}
+    public class {entityContractDeclaration.FriendlyName}{GetBaseClassAndImplementedInterfaceListString(entityContractDeclaration)}
     {{");
 
             WritePropertyDeclarations(output, entityContractDeclaration);
@@ -76,7 +77,6 @@ $@"
         {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
-            // XtoOne or XToOneOrZero navigation properties
             foreach (var prop in entityContractDeclaration.EntityReferences
                 .Where(pker => pker.EntityRefAttribute.Multiplicity != EntityReferenceMultiplicityEnum.Many))
             {
@@ -86,20 +86,6 @@ $@"
         /// <summary>
         /// Gets or sets the '{prop.Name}' navigation property value.
         /// </summary>{GetAttributeDeclarations(prop)}
-        [EntityReference({nameof(EntityReferenceMultiplicityEnum)}.{prop.EntityRefAttribute.Multiplicity})]
-        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
-            }
-
-            // XtoMany navigation properties
-            foreach (var prop in entityContractDeclaration.EntityReferences
-                .Where(pker => pker.EntityRefAttribute.Multiplicity == EntityReferenceMultiplicityEnum.Many))
-            {
-                output.WriteLine(
-$@"
-        /// <summary>
-        /// Gets or sets the '{prop.Name}' navigation property value.
-        /// </summary>{GetAttributeDeclarations(prop)}
-        [EntityReference({nameof(EntityReferenceMultiplicityEnum)}.{prop.EntityRefAttribute.Multiplicity})]
         {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
@@ -223,17 +209,5 @@ $@"
             else
                 throw new NotSupportedException("Properties without get or set are not supported!");
         }
-
-        //private static string GetNavigationPropertyMultiplicityEnumValueString(PropertyDeclarationModel propertyDeclaration)
-        //{
-        //    if (propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.Generic.ICollection<>))
-        //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.ICollection))
-        //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.Generic.IList<>))
-        //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.IList))
-        //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Array)))
-        //    {
-                
-        //    }
-        //}
     }
 }

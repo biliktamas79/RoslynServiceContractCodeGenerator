@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
@@ -25,6 +27,28 @@ namespace ServiceContractCodeGen
         public readonly MethodInfo GetMethod;
         public readonly MethodInfo SetMethod;
 
+        private static class Helper
+        {
+            [Required(AllowEmptyStrings = true)]
+            private static string RequiredAllowEmptyStringsProperty { get; }
+
+            [Required]
+            private static string RequiredProperty { get; }
+
+            internal static CustomAttributeData RequiredAllowEmptyStringsAttributeData;
+            internal static CustomAttributeData RequiredAttributeData;
+
+            static Helper()
+            {
+                RequiredAllowEmptyStringsAttributeData = typeof(Helper).GetProperty(nameof(RequiredAllowEmptyStringsProperty), BindingFlags.Static | BindingFlags.NonPublic)
+                    .CustomAttributes.Where(attr => attr.AttributeType == typeof(RequiredAttribute))
+                    .SingleOrDefault();
+                RequiredAttributeData = typeof(Helper).GetProperty(nameof(RequiredProperty), BindingFlags.Static | BindingFlags.NonPublic)
+                    .CustomAttributes.Where(attr => attr.AttributeType == typeof(RequiredAttribute))
+                    .SingleOrDefault();
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PropertyDeclarationModel"/> class for the given <see cref="PropertyInfo"/> instance.
         /// </summary>
@@ -35,10 +59,23 @@ namespace ServiceContractCodeGen
             this.DeclaringProperty = pi ?? throw new ArgumentNullException(nameof(pi));
             this.PkAttribute = pi.GetCustomAttribute<PrimaryKeyAttribute>(true);
             this.EntityRefAttribute = pi.GetCustomAttribute<EntityReferenceAttribute>(true);
-            this.Attributes = pi.CustomAttributes.Where(attr =>
+            var attributeList = pi.CustomAttributes.Where(attr =>
                 attr.AttributeType != typeof(PrimaryKeyAttribute)
                 && attr.AttributeType != typeof(EntityReferenceAttribute))
-                .ToArray() ?? new CustomAttributeData[0];
+                .ToList() ?? new List<CustomAttributeData>();
+            
+            // if this is an entity reference
+            if ((this.EntityRefAttribute != null)
+                // if it cannot be null
+                && this.EntityRefAttribute.Multiplicity == EntityReferenceMultiplicityEnum.One
+                // and the Required attribute is not applied yet
+                && !pi.CustomAttributes.Any(customAttribute => customAttribute.AttributeType == typeof(RequiredAttribute)))
+            {
+                // we add it to the property declaration model attributes
+                attributeList.Add(Helper.RequiredAttributeData);
+            }
+
+            this.Attributes = attributeList.ToArray();
 
             if ((this.PkAttribute != null) && (this.EntityRefAttribute != null))
                 this.PropertyCategory = PropertyCategoryEnum.EntityRefAsPrimaryKey;
@@ -100,6 +137,17 @@ namespace ServiceContractCodeGen
         public bool IsPk
         {
             get { return this.PkAttribute != null; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is entity reference.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is entity reference; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsEntityReference
+        {
+            get { return this.EntityRefAttribute != null; }
         }
 
         /// <summary>

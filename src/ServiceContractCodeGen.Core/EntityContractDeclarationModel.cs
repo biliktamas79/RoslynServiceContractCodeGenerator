@@ -93,6 +93,11 @@ namespace ServiceContractCodeGen
 
             this.Name = entityContractDeclarationInterface.Name;
             this.FriendlyName = entityContractDeclarationInterface.GetFriendlyTypeName();
+            if ((this.Name[0] == 'I') && (this.Name.Length > 1) && char.IsUpper(this.Name[1]))
+            {
+                this.Name = this.Name.Substring(1);
+                this.FriendlyName = this.FriendlyName.Substring(1);
+            }
 
             this.EnsureCompositePkOrder();
         }

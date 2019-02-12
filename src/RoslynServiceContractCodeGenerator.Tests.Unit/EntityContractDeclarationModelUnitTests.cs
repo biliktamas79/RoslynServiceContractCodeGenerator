@@ -31,7 +31,7 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
             {
                 var entityCodeGenModel = new EntityContractDeclarationModel(typeDeclaringEntityContract);
 
-                string filePath = Path.Combine(Environment.CurrentDirectory, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.{entityCodeGenModel.FriendlyName}.cs");
+                string filePath = Path.Combine(Environment.CurrentDirectory, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.I{entityCodeGenModel.FriendlyName}.cs");
                 using (System.IO.FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     using (var writer = new System.IO.StreamWriter(fs, Encoding.UTF8, 4096))

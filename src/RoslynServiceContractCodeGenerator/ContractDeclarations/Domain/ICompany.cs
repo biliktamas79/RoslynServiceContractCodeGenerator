@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using ServiceContractCodeGen.Attributes;
+using ServiceContractCodeGen.Enums;
 
 namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
 {
@@ -21,5 +22,8 @@ namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
         /// </summary>
         [StringLength(40, MinimumLength = 0)]
         string ExternalId { get; set; }
+
+        [EntityReference(EntityReferenceMultiplicityEnum.Many)]
+        IProduct Products { get; set; }
     }
 }
