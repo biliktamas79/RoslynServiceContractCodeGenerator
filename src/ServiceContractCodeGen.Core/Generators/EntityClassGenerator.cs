@@ -10,7 +10,7 @@ namespace ServiceContractCodeGen.Generators
     using Enums;
     using Extensions;
 
-    public class DomainEntityClassGenerator
+    public class EntityClassGenerator
     {
         public TextWriter Generate(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
         {
@@ -52,7 +52,7 @@ $@"
         /// Gets or sets the '{prop.Name}' primary key property value.
         /// </summary>
         [Key]{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
+        public {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.PkEntityReferences
@@ -64,7 +64,7 @@ $@"
         /// <summary>
         /// Gets or sets the foreign key of the '{prop.Name}' entity reference that is part of the primary key.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
+        public virtual {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.NonPkProperties)
@@ -74,7 +74,7 @@ $@"
         /// <summary>
         /// Gets or sets the '{prop.Name}' simple property value.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
+        public {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             foreach (var prop in entityContractDeclaration.EntityReferences
@@ -86,7 +86,7 @@ $@"
         /// <summary>
         /// Gets or sets the '{prop.Name}' navigation property value.
         /// </summary>{GetAttributeDeclarations(prop)}
-        {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
+        public virtual {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
 
             return output;
@@ -193,9 +193,10 @@ $@"
         private static string GetBaseClassAndImplementedInterfaceListString(EntityContractDeclarationModel entityContractDeclaration)
         {
             var interfaces = entityContractDeclaration.DeclaringInterfaceType.GetInterfaces();
-            return ((interfaces == null) || (interfaces.Length == 0))
+            return $" : I{entityContractDeclaration.FriendlyName}" + 
+                (((interfaces == null) || (interfaces.Length == 0))
                 ? null
-                : " : " + string.Join(", ", interfaces.Select(i => i.Name));
+                : ", " + string.Join(", ", interfaces.Select(i => i.Name)));
         }
 
         private static string GetPropertyGetSetDeclaration(PropertyDeclarationModel propertyDeclaration)
