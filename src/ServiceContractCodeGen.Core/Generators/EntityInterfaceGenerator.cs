@@ -207,9 +207,10 @@ $@"
         private static string GetBaseClassAndImplementedInterfaceListString(EntityContractDeclarationModel entityContractDeclaration)
         {
             var interfaces = entityContractDeclaration.DeclaringInterfaceType.GetInterfaces();
-            return ((interfaces == null) || (interfaces.Length == 0))
+            return $" : I{entityContractDeclaration.FriendlyName}, IHasPk<{GetPrimaryKeyTypeName(entityContractDeclaration)}>" +
+                (((interfaces == null) || (interfaces.Length == 0))
                 ? null
-                : " : " + string.Join(", ", interfaces.Select(i => i.Name));
+                : ", " + string.Join(", ", interfaces.Select(i => i.Name)));
         }
 
         private static string GetPropertyGetSetDeclaration(PropertyDeclarationModel propertyDeclaration)
@@ -224,6 +225,23 @@ $@"
                 throw new NotSupportedException("Properties without get or set are not supported!");
         }
 
+        private static string GetPrimaryKeyTypeName(EntityContractDeclarationModel entityContractDeclaration)
+        {
+            if (entityContractDeclaration == null)
+                throw new ArgumentNullException(nameof(entityContractDeclaration));
+            if (!entityContractDeclaration.HasPk)
+                throw new ArgumentException("Entity does not have a primary key.", nameof(entityContractDeclaration));
+
+            if (entityContractDeclaration.HasCompositePk)
+                return entityContractDeclaration.FriendlyName + "Pk";
+            else if (entityContractDeclaration.PkProperties.Length == 1)
+                return entityContractDeclaration.PkProperties[0].TypeFriendlyName;
+            else if (entityContractDeclaration.PkEntityReferences.Length == 1)
+                throw new NotSupportedException("Primary key entity references are not supported!");
+            else
+                throw new NotSupportedException();
+        }
+
         //private static string GetNavigationPropertyMultiplicityEnumValueString(PropertyDeclarationModel propertyDeclaration)
         //{
         //    if (propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.Generic.ICollection<>))
@@ -232,7 +250,7 @@ $@"
         //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Collections.IList))
         //        || propertyDeclaration.DeclaringProperty.PropertyType.IsAssignableFrom(typeof(System.Array)))
         //    {
-                
+
         //    }
         //}
     }
