@@ -108,6 +108,9 @@ $@"
 
         private static string GetAttributeDeclarations(PropertyDeclarationModel propertyDeclaration)
         {
+            if (!propertyDeclaration.Attributes.Any())
+                return null;
+
             var sb = new StringBuilder();
             foreach (var attr in propertyDeclaration.Attributes)
             {
@@ -207,10 +210,34 @@ $@"
         private static string GetBaseClassAndImplementedInterfaceListString(EntityContractDeclarationModel entityContractDeclaration)
         {
             var interfaces = entityContractDeclaration.DeclaringInterfaceType.GetInterfaces();
-            return $" : I{entityContractDeclaration.FriendlyName}, IHasPk<{GetPrimaryKeyTypeName(entityContractDeclaration)}>" +
-                (((interfaces == null) || (interfaces.Length == 0))
-                ? null
-                : ", " + string.Join(", ", interfaces.Select(i => i.Name)));
+
+            bool appendSeparator = false;
+            StringBuilder sb = new StringBuilder();
+            
+            if (entityContractDeclaration.HasPk)
+            {
+                sb.Append(" : IHasPk<").Append(GetPrimaryKeyTypeName(entityContractDeclaration)).Append(">");
+                appendSeparator = true;
+            }
+
+            if ((interfaces != null) && (interfaces.Length > 0))
+            {
+                if (!appendSeparator)
+                {
+                    sb.Append(" : ");
+                }
+
+                foreach (var i in interfaces)
+                {
+                    if (appendSeparator)
+                        sb.Append(", ");
+                    else
+                        appendSeparator = true;
+
+                    sb.AppendFriendlyTypeName(i);
+                }
+            }
+            return sb.ToString();
         }
 
         private static string GetPropertyGetSetDeclaration(PropertyDeclarationModel propertyDeclaration)

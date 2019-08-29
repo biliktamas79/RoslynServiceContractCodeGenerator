@@ -95,6 +95,9 @@ $@"
 
         private static string GetAttributeDeclarations(PropertyDeclarationModel propertyDeclaration)
         {
+            if (!propertyDeclaration.Attributes.Any())
+                return null;
+
             var sb = new StringBuilder();
             foreach (var attr in propertyDeclaration.Attributes)
             {
@@ -369,12 +372,12 @@ $@"
                 appendSeparator = true;
             }
 
-            foreach (var pkProp in entityContractDeclaration.PkEntityReferences)
+            foreach (var pkEntityRefProp in entityContractDeclaration.PkEntityReferences)
             {
                 if (appendSeparator)
                     output.Write($", ");
 
-                output.Write($"{paramName}.{pkProp.Name}Id");
+                output.Write($"{paramName}.{pkEntityRefProp.Name}Id");
                 appendSeparator = true;
             }
 

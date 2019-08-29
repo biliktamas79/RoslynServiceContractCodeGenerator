@@ -11,9 +11,9 @@ namespace ServiceContractCodeGen.Attributes
 
         public string Namespace { get; private set; }
 
-        public EntityContractDeclarationAttribute(string ns = null, string name = null)
+        public EntityContractDeclarationAttribute(string @namespace = null, string name = null)
         {
-            this.Namespace = ns;
+            this.Namespace = @namespace;
             this.Name = name;
         }
     }
