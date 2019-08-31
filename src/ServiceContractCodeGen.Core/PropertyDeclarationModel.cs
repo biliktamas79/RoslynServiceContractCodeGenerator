@@ -16,15 +16,19 @@ namespace ServiceContractCodeGen
     /// <seealso cref="System.IComparable{ServiceContractCodeGen.PropertyDeclarationModel}" />
     public class PropertyDeclarationModel : IComparable<PropertyDeclarationModel>
     {
+        [NonSerialized]
         public readonly PropertyInfo DeclaringProperty;
         public readonly PropertyCategoryEnum PropertyCategory;
         public readonly PrimaryKeyAttribute PkAttribute;
         public readonly EntityReferenceAttribute EntityRefAttribute;
+        [NonSerialized]
         public readonly CustomAttributeData[] Attributes;
         public readonly string Name;
         public readonly string TypeFriendlyName;
         public readonly bool IsStatic;
+        [NonSerialized]
         public readonly MethodInfo GetMethod;
+        [NonSerialized]
         public readonly MethodInfo SetMethod;
 
         private static class Helper

@@ -14,12 +14,15 @@ namespace ServiceContractCodeGen
     /// </summary>
     public class EntityContractDeclarationModel
     {
+        [NonSerialized]
         public readonly Type DeclaringInterfaceType;
+        [NonSerialized]
         public readonly EntityContractDeclarationAttribute EntityContractDeclarationAttribute;
         public readonly PropertyDeclarationModel[] PkProperties;
         public readonly PropertyDeclarationModel[] NonPkProperties;
         public readonly PropertyDeclarationModel[] EntityReferences;
         public readonly PropertyDeclarationModel[] PkEntityReferences;
+        [NonSerialized]
         public readonly CustomAttributeData[] Attributes;
         public readonly string Name;
         public readonly string FriendlyName;

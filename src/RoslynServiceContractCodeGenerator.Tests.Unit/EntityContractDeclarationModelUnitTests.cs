@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using ServiceContractCodeGen;
 using ServiceContractCodeGen.Attributes;
 using ServiceContractCodeGen.Generators;
@@ -59,6 +60,35 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
                     {
                         var entityClassGenerator = new EntityClassGenerator();
                         entityClassGenerator.Generate(writer, entityCodeGenModel, entityCodeGenModel.EntityContractDeclarationAttribute.Namespace ?? "ProductName.Data.Model");
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
+        public void UnitTest_SerializeEntityContractDeclarationModel()
+        {
+            var auditableEntityType = typeof(IAuditableEntity);
+            var entityDeclarationTypes = auditableEntityType.Assembly.DefinedTypes.Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))).ToArray();
+
+            var jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+            };
+
+            foreach (var typeDeclaringEntityContract in entityDeclarationTypes)
+            {
+                var entityCodeGenModel = new EntityContractDeclarationModel(typeDeclaringEntityContract);
+
+                string filePath = Path.Combine(Environment.CurrentDirectory, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.{entityCodeGenModel.FriendlyName}.codeGenModel.json");
+                using (System.IO.FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    using (var writer = new System.IO.StreamWriter(fs, Encoding.UTF8, 4096))
+                    {
+                        var jsonString = JsonConvert.SerializeObject(entityCodeGenModel, Formatting.Indented, jsonSerializerSettings);
+                        writer.Write(jsonString);
                     }
                 }
             }

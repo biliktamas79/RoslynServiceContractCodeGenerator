@@ -50,7 +50,7 @@ $@"
                 output.WriteLine(
 $@"
         /// <summary>
-        /// Gets or sets the '{prop.Name}' primary key property value.
+        /// {GetPropertyGetSetXmlCommentPrefix(prop)} the '{prop.Name}' primary key property value.
         /// </summary>
         [Key]{GetAttributeDeclarations(prop)}
         public {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
@@ -63,7 +63,7 @@ $@"
                 output.WriteLine(
 $@"
         /// <summary>
-        /// Gets or sets the foreign key of the '{prop.Name}' entity reference that is part of the primary key.
+        /// {GetPropertyGetSetXmlCommentPrefix(prop)} the foreign key of the '{prop.Name}' entity reference that is part of the primary key.
         /// </summary>{GetAttributeDeclarations(prop)}
         public virtual {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
@@ -73,7 +73,7 @@ $@"
                 output.WriteLine(
 $@"
         /// <summary>
-        /// Gets or sets the '{prop.Name}' simple property value.
+        /// {GetPropertyGetSetXmlCommentPrefix(prop)} the '{prop.Name}' simple property value.
         /// </summary>{GetAttributeDeclarations(prop)}
         public {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
@@ -85,7 +85,7 @@ $@"
                 output.WriteLine(
 $@"
         /// <summary>
-        /// Gets or sets the '{prop.Name}' navigation property value.
+        /// {GetPropertyGetSetXmlCommentPrefix(prop)} the '{prop.Name}' navigation property value.
         /// </summary>{GetAttributeDeclarations(prop)}
         public virtual {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
             }
@@ -216,6 +216,18 @@ $@"
             }
 
             return sb.ToString();
+        }
+
+        private static string GetPropertyGetSetXmlCommentPrefix(PropertyDeclarationModel propertyDeclaration)
+        {
+            if (propertyDeclaration.CanGet && propertyDeclaration.CanSet)
+                return "Gets or sets";
+            else if (propertyDeclaration.CanGet)
+                return "Gets";
+            else if (propertyDeclaration.CanSet)
+                return "Sets";
+            else
+                throw new NotSupportedException("Properties without get or set are not supported!");
         }
 
         private static string GetPropertyGetSetDeclaration(PropertyDeclarationModel propertyDeclaration)
