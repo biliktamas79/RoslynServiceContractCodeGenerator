@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ServiceContractCodeGen.Attributes
+namespace MyCompany.Attributes
 {
     using Enums;
 

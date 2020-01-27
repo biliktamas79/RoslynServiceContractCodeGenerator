@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using MyCompany;
 using ServiceContractCodeGen.Attributes;
 
 namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Data

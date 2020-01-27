@@ -9,6 +9,8 @@ namespace ServiceContractCodeGen
     using Attributes;
     using Enums;
     using Extensions;
+    using MyCompany.Attributes;
+    using MyCompany.Enums;
 
     /// <summary>
     /// Model class representing a property declaration.

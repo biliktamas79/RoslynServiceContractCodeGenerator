@@ -9,9 +9,21 @@ namespace ServiceContractCodeGen.Generators
 {
     using Enums;
     using Extensions;
+    using MyCompany.Enums;
 
     public class EntityClassGenerator
     {
+        private readonly static HashSet<string> defaultNamespacesUsed = new HashSet<string>()
+        {
+            "System",
+            "System.Collections.Generic",
+            "System.ComponentModel.DataAnnotations",
+            "System.ComponentModel.DataAnnotations.Schema",
+            "MyCompany",
+            "MyCompany.Attributes",
+            "MyCompany.Enums"
+        };
+
         public TextWriter Generate(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
         {
             if (output == null)
@@ -22,11 +34,7 @@ namespace ServiceContractCodeGen.Generators
                 throw new ArgumentException("The provided entity contract declaration is not an interface!", nameof(entityContractDeclaration));
 
             output.Write(
-$@"using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using ServiceContractCodeGen.Attributes;
+$@"{GetAdditionalNamespaceUsings(entityContractDeclaration, targetNamespace)}
 
 namespace {targetNamespace}
 {{
@@ -35,6 +43,17 @@ namespace {targetNamespace}
             WriteStaticRegion(output, entityContractDeclaration);
 
             WritePropertyDeclarations(output, entityContractDeclaration);
+
+            if (entityContractDeclaration.HasPk)
+                WriteIHasPkInterfaceImplementation(output, entityContractDeclaration);
+
+            foreach (var intrfce in entityContractDeclaration.DeclaringInterfaceType.GetInterfaces())
+            {
+                output.Write(
+@"
+        ");
+                WriteInterfaceImplementation(output, entityContractDeclaration, intrfce);
+            }
 
             output.Write(
 $@"
@@ -213,6 +232,48 @@ $@"
                 {
                     sb.Append(", ").AppendFriendlyTypeName(intrfce);
                 }
+            }
+
+            return sb.ToString();
+        }
+
+        private static string GetAdditionalNamespaceUsings(EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
+        {
+            var namespaceUsings = new HashSet<string>(defaultNamespacesUsed, StringComparer.InvariantCulture);
+
+            foreach (var i in entityContractDeclaration.DeclaringInterfaceType.GetInterfaces())
+            {
+                if (!namespaceUsings.Contains(i.Namespace))
+                    namespaceUsings.Add(i.Namespace);
+            }
+
+            foreach (var prop in entityContractDeclaration.GetProperties())
+            {
+                var entityNamespace = entityContractDeclaration.EntityContractDeclarationAttribute?.Namespace ?? prop.DeclaringProperty.PropertyType.Namespace;
+                if ((entityNamespace != targetNamespace) && !namespaceUsings.Contains(entityNamespace))
+                    namespaceUsings.Add(entityNamespace);
+            }
+
+            foreach (var a in entityContractDeclaration.GetCustomAttributes())
+            {
+                if (!namespaceUsings.Contains(a.AttributeType.Namespace))
+                    namespaceUsings.Add(a.AttributeType.Namespace);
+
+                if ((a.ConstructorArguments != null) && (a.ConstructorArguments.Count > 0))
+                {
+                    foreach (var ca in a.ConstructorArguments)
+                    {
+                        if (!namespaceUsings.Contains(ca.ArgumentType.Namespace))
+                            namespaceUsings.Add(ca.ArgumentType.Namespace);
+                    }
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var ns in namespaceUsings.OrderBy(s => s, StringComparer.InvariantCulture))
+            {
+                sb.Append(@"
+using ").Append(ns).Append(";");
             }
 
             return sb.ToString();
@@ -438,6 +499,141 @@ $@"
             }
 
             return output;
+        }
+
+        private TextWriter WriteIHasPkInterfaceImplementation(TextWriter output, EntityContractDeclarationModel entityContractDeclaration)
+        {
+            output.Write(
+$@"
+        #region IHasPk<{GetPrimaryKeyTypeName(entityContractDeclaration)}> implementation");
+
+            WritePublicInstanceGetPkMethod(output, entityContractDeclaration);
+
+            output.Write(
+@"
+        ");
+            WritePublicInstanceSetPkMethod(output, entityContractDeclaration);
+
+            output.Write(
+$@"
+        #endregion IHasPk<{GetPrimaryKeyTypeName(entityContractDeclaration)}> implementation");
+
+            return output;
+        }
+
+        private TextWriter WritePublicInstanceGetPkMethod(TextWriter output, EntityContractDeclarationModel entityContractDeclaration)
+        {
+            output.Write(
+$@"
+        /// <summary>
+        /// Gets the primary key of this '{entityContractDeclaration.FriendlyName}' instance.
+        /// </summary>
+        /// <returns>The primary key value of this '{entityContractDeclaration.FriendlyName}' instance.</returns>
+        public {GetPrimaryKeyTypeName(entityContractDeclaration)} GetPk()
+        {{
+            return ");
+            AppendGettingPrimaryKey(output, entityContractDeclaration, "this");
+            output.Write(
+@";
+        }");
+
+            return output;
+        }
+
+        private TextWriter WritePublicInstanceSetPkMethod(TextWriter output, EntityContractDeclarationModel entityContractDeclaration)
+        {
+            output.Write(
+$@"
+        /// <summary>
+        /// Sets the primary key of this '{entityContractDeclaration.FriendlyName}' instance to the given value.
+        /// </summary>
+        /// <param name=""pk"">The primary key to set.</param>
+        public void SetPk({GetPrimaryKeyTypeName(entityContractDeclaration)} pk)
+        {{
+            ");
+            AppendSettingPrimaryKey(output, entityContractDeclaration, "this", "pk");
+            output.Write(
+@";
+        }");
+
+            return output;
+        }
+
+        private TextWriter WriteInterfaceImplementation(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, Type intrfceType)
+        {
+            var intrfaceFriendlyTypeName = intrfceType.GetFriendlyTypeName();
+
+            output.Write(
+$@"
+        #region {intrfaceFriendlyTypeName} implementation");
+
+            output = WriteImplicitImplementationForInterfaceProperties(output, entityContractDeclaration, intrfceType);
+
+//            output.Write(
+//@"
+//        ");
+            output = WriteImplicitImplementationForInterfaceMethods(output, entityContractDeclaration, intrfceType);
+
+            output.Write(
+$@"
+        #endregion {intrfaceFriendlyTypeName} implementation");
+
+            return output;
+        }
+
+        private TextWriter WriteImplicitImplementationForInterfaceProperties(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, Type intrfceType)
+        {
+            foreach (var pi in intrfceType.GetProperties())
+            {
+                var prop = new PropertyDeclarationModel(pi);
+
+                output.WriteLine(
+$@"
+        /// <summary>
+        /// {GetPropertyGetSetXmlCommentPrefix(prop)} the '{prop.Name}' property value.
+        /// </summary>{GetAttributeDeclarations(prop)}
+        public {prop.TypeFriendlyName} {prop.Name} {{ {GetPropertyGetSetDeclaration(prop)} }}");
+            }
+
+            return output;
+        }
+
+        private TextWriter WriteImplicitImplementationForInterfaceMethods(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, Type intrfceType)
+        {
+            foreach (var mi in intrfceType.GetMethods())
+            {
+                if (mi.IsStatic || !mi.IsPublic || mi.IsSpecialName)
+                    continue;
+
+                var methodParams = mi.GetParameters() ?? Array.Empty<ParameterInfo>();
+
+                output.WriteLine(
+$@"
+        /// <summary>
+        /// 
+        /// </summary>
+        public {mi.ReturnType.GetFriendlyTypeName()} {mi.Name}({GetMethodParameterDeclaration(mi)})
+        {{
+            // TODO Implement method
+        }}");
+
+            }
+
+            return output;
+        }
+
+        private string GetMethodParameterDeclaration(MethodInfo mi)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var methodParam in mi.GetParameters())
+            {
+                if (sb.Length > 0)
+                    sb.Append(", ");
+
+                sb.Append(methodParam.ParameterType.GetFriendlyTypeName()).Append(" ").Append(methodParam.Name);
+            }
+
+            return sb.ToString();
         }
     }
 }

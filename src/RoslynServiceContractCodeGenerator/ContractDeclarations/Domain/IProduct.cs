@@ -6,6 +6,9 @@ using ServiceContractCodeGen.Attributes;
 
 namespace RoslynServiceContractCodeGenerator.ContractDeclarations.Domain
 {
+    using MyCompany;
+    using MyCompany.Attributes;
+    using MyCompany.Enums;
     using ServiceContractCodeGen.Enums;
 
     [EntityContractDeclaration("MyProduct.Domain.Entities")]

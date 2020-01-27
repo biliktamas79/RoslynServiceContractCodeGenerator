@@ -9,10 +9,21 @@ namespace ServiceContractCodeGen.Generators
 {
     using Enums;
     using Extensions;
+    using MyCompany.Enums;
     using System.ComponentModel.DataAnnotations;
 
     public class EntityInterfaceGenerator
     {
+        private readonly static HashSet<string> defaultNamespacesUsed = new HashSet<string>()
+        {
+            "System",
+            "System.Collections.Generic",
+            "System.ComponentModel.DataAnnotations",
+            "MyCompany",
+            "MyCompany.Attributes",
+            "MyCompany.Enums"
+        };
+
         public TextWriter Generate(TextWriter output, EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
         {
             if (output == null)
@@ -23,9 +34,7 @@ namespace ServiceContractCodeGen.Generators
                 throw new ArgumentException("The provided entity contract declaration is not an interface!", nameof(entityContractDeclaration));
 
             output.Write(
-$@"using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+$@"{GetAdditionalNamespaceUsings(entityContractDeclaration, targetNamespace)}
 
 namespace {targetNamespace}
 {{
@@ -237,6 +246,48 @@ $@"
                     sb.AppendFriendlyTypeName(i);
                 }
             }
+            return sb.ToString();
+        }
+
+        private static string GetAdditionalNamespaceUsings(EntityContractDeclarationModel entityContractDeclaration, string targetNamespace)
+        {
+            var namespaceUsings = new HashSet<string>(defaultNamespacesUsed, StringComparer.InvariantCulture);
+
+            foreach (var i in entityContractDeclaration.DeclaringInterfaceType.GetInterfaces())
+            {
+                if (!namespaceUsings.Contains(i.Namespace))
+                    namespaceUsings.Add(i.Namespace);
+            }
+
+            foreach (var prop in entityContractDeclaration.GetProperties())
+            {
+                var entityNamespace = entityContractDeclaration.EntityContractDeclarationAttribute?.Namespace ?? prop.DeclaringProperty.PropertyType.Namespace;
+                if ((entityNamespace != targetNamespace) && !namespaceUsings.Contains(entityNamespace))
+                    namespaceUsings.Add(entityNamespace);
+            }
+
+            foreach (var a in entityContractDeclaration.GetCustomAttributes())
+            {
+                if (!namespaceUsings.Contains(a.AttributeType.Namespace))
+                    namespaceUsings.Add(a.AttributeType.Namespace);
+
+                if ((a.ConstructorArguments != null) && (a.ConstructorArguments.Count > 0))
+                {
+                    foreach (var ca in a.ConstructorArguments)
+                    {
+                        if (!namespaceUsings.Contains(ca.ArgumentType.Namespace))
+                            namespaceUsings.Add(ca.ArgumentType.Namespace);
+                    }
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var ns in namespaceUsings.OrderBy(s => s, StringComparer.InvariantCulture))
+            {
+                sb.Append(@"
+using ").Append(ns).Append(";");
+            }
+
             return sb.ToString();
         }
 

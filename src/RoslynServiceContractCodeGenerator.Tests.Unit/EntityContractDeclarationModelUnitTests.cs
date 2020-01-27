@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MyCompany;
 using Newtonsoft.Json;
 using ServiceContractCodeGen;
 using ServiceContractCodeGen.Attributes;
@@ -16,7 +17,7 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
         [TestMethod]
         public void Test_EntityContractDeclarationModel_constructor()
         {
-            foreach (var typeDeclaringEntityContract in typeof(IAuditableEntity).Assembly.GetExportedTypes().Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))))
+            foreach (var typeDeclaringEntityContract in typeof(IGetListItemsRequestV01).Assembly.GetExportedTypes().Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))))
             {
                 var entityCodeGenModel = new EntityContractDeclarationModel(typeDeclaringEntityContract);
                 System.Diagnostics.Debug.WriteLine(entityCodeGenModel);
@@ -26,13 +27,22 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
         [TestMethod]
         public void UnitTest_EntityInterfaceGenerator()
         {
-            var auditableEntityType = typeof(IAuditableEntity);
+            var auditableEntityType = typeof(IGetListItemsRequestV01);
             var entityDeclarationTypes = auditableEntityType.Assembly.DefinedTypes.Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))).ToArray();
+            var targetBaseFolderPath = Path.GetFullPath(@"../../../../Product.Generated/");
+            var targetBaseFolder = new DirectoryInfo(targetBaseFolderPath);
+            if (!targetBaseFolder.Exists)
+                targetBaseFolder.Create();
+
             foreach (var typeDeclaringEntityContract in entityDeclarationTypes)
             {
                 var entityCodeGenModel = new EntityContractDeclarationModel(typeDeclaringEntityContract);
+                var subDirPath = entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.').Replace(".", @"/");
+                var targetDirectory = string.IsNullOrWhiteSpace(subDirPath)
+                    ? targetBaseFolder
+                    : targetBaseFolder.CreateSubdirectory(subDirPath);
 
-                string filePath = Path.Combine(Environment.CurrentDirectory, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.I{entityCodeGenModel.FriendlyName}.cs");
+                string filePath = Path.Combine(targetDirectory.FullName, $"I{entityCodeGenModel.FriendlyName}.cs");
                 using (System.IO.FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     using (var writer = new System.IO.StreamWriter(fs, Encoding.UTF8, 4096))
@@ -47,13 +57,24 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
         [TestMethod]
         public void UnitTest_EntityClassGenerator()
         {
-            var auditableEntityType = typeof(IAuditableEntity);
+            var auditableEntityType = typeof(IGetListItemsRequestV01);
             var entityDeclarationTypes = auditableEntityType.Assembly.DefinedTypes.Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))).ToArray();
+            var targetBaseFolderPath = Path.GetFullPath(@"../../../../Product.Generated/");
+            var targetBaseFolder = new DirectoryInfo(targetBaseFolderPath);
+            if (!targetBaseFolder.Exists)
+                targetBaseFolder.Create();
+
             foreach (var typeDeclaringEntityContract in entityDeclarationTypes)
             {
                 var entityCodeGenModel = new EntityContractDeclarationModel(typeDeclaringEntityContract);
 
-                string filePath = Path.Combine(Environment.CurrentDirectory, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.{entityCodeGenModel.FriendlyName}.cs");
+                var subDirPath = entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.').Replace(".", @"/");
+                var targetDirectory = string.IsNullOrWhiteSpace(subDirPath)
+                    ? targetBaseFolder
+                    : targetBaseFolder.CreateSubdirectory(subDirPath);
+
+                //string filePath = Path.Combine(targetDirectory.FullName, $"{entityCodeGenModel.DeclaringInterfaceType.Namespace.Replace(auditableEntityType.Namespace, "").TrimStart('.')}.{entityCodeGenModel.FriendlyName}.cs");
+                string filePath = Path.Combine(targetDirectory.FullName, $"{entityCodeGenModel.FriendlyName}.cs");
                 using (System.IO.FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     using (var writer = new System.IO.StreamWriter(fs, Encoding.UTF8, 4096))
@@ -68,7 +89,7 @@ namespace RoslynServiceContractCodeGenerator.Tests.Unit
         [TestMethod]
         public void UnitTest_SerializeEntityContractDeclarationModel()
         {
-            var auditableEntityType = typeof(IAuditableEntity);
+            var auditableEntityType = typeof(IGetListItemsRequestV01);
             var entityDeclarationTypes = auditableEntityType.Assembly.DefinedTypes.Where(type => Attribute.IsDefined(type, typeof(EntityContractDeclarationAttribute))).ToArray();
 
             var jsonSerializerSettings = new JsonSerializerSettings()

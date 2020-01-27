@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace ServiceContractCodeGen
 {
+    using System.Collections;
     using Attributes;
     using Enums;
     using Extensions;
@@ -12,7 +13,7 @@ namespace ServiceContractCodeGen
     /// <summary>
     /// Model class representing an entity declaration.
     /// </summary>
-    public class EntityContractDeclarationModel
+    public class EntityContractDeclarationModel : IEnumerable<PropertyDeclarationModel>
     {
         [NonSerialized]
         public readonly Type DeclaringInterfaceType;
@@ -156,6 +157,67 @@ namespace ServiceContractCodeGen
                 {
                     if (pk.PkAttribute.Order != pkOrder + 1)
                         throw new ArgumentException($"Order of properties marked as private key is not continuous.");
+                }
+            }
+        }
+
+        public IEnumerator<PropertyDeclarationModel> GetEnumerator()
+        {
+            foreach (var p in this.PkProperties)
+                yield return p;
+
+            foreach (var p in this.PkEntityReferences)
+                yield return p;
+
+            foreach (var p in this.EntityReferences)
+                yield return p;
+
+            foreach (var p in this.NonPkProperties)
+                yield return p;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        public IEnumerable<PropertyDeclarationModel> GetProperties(PropertyCategoryEnum propertyCategoryFlagsToInclude = PropertyCategoryEnum.PrimaryKey | PropertyCategoryEnum.EntityRef | PropertyCategoryEnum.EntityRefAsPrimaryKey | PropertyCategoryEnum.NonPk)
+        {
+            if (propertyCategoryFlagsToInclude.HasFlag(PropertyCategoryEnum.PrimaryKey))
+            {
+                foreach (var p in this.PkProperties)
+                    yield return p;
+            }
+
+            if (propertyCategoryFlagsToInclude.HasFlag(PropertyCategoryEnum.EntityRefAsPrimaryKey))
+            {
+                foreach (var p in this.PkEntityReferences)
+                    yield return p;
+            }
+
+            if (propertyCategoryFlagsToInclude.HasFlag(PropertyCategoryEnum.EntityRef))
+            {
+                foreach (var p in this.EntityReferences)
+                    yield return p;
+            }
+
+            if (propertyCategoryFlagsToInclude.HasFlag(PropertyCategoryEnum.NonPk))
+            {
+                foreach (var p in this.NonPkProperties)
+                    yield return p;
+            }
+        }
+
+        public IEnumerable<CustomAttributeData> GetCustomAttributes()
+        {
+            foreach (var a in this.Attributes)
+                yield return a;
+
+            foreach (var prop in this.GetProperties(PropertyCategoryEnum.PrimaryKey | PropertyCategoryEnum.EntityRef | PropertyCategoryEnum.EntityRefAsPrimaryKey | PropertyCategoryEnum.NonPk))
+            {
+                foreach (var a in prop.Attributes)
+                {
+                    yield return a;
                 }
             }
         }

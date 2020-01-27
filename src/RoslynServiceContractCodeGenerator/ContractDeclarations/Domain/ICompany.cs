@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using MyCompany;
+using MyCompany.Attributes;
+using MyCompany.Enums;
 using ServiceContractCodeGen.Attributes;
 using ServiceContractCodeGen.Enums;
 

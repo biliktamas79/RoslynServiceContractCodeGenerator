@@ -9,17 +9,11 @@ using System.Threading.Tasks;
 
 namespace RoslynServiceContractCodeGenerator
 {
-    [EntityContractDeclaration("MyRoslynTest.v01")]
-    public interface IGetListItemsRequestV01 : IPagedBySkipTake
+    [EntityContractDeclaration("MyRoslynTest.v02")]
+    public interface IGetListItemsResponseV02 : IPagedBySkipTake, IHasId
     {
-        [Required]
-        [StringLength(50, MinimumLength = 1)]
-        string User { get; }
-    }
+        IGetListItemsRequestV01 Request { get; }
 
-    [EntityContractDeclaration("MyRoslynTest.v01")]
-    public interface IGetListItemsResponseV01 : IPagedBySkipTake, IHasId
-    {
         IReadOnlyList<Tuple<int, string>> Items { get; }
 
         int? TotalCount { get; }

@@ -2,15 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>ServiceContractCodeGen</RootNamespace>
+    <RootNamespace>MyCompany</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MyCompany.Shared\MyCompany.Shared.csproj" />
   </ItemGroup>
 
 </Project>
